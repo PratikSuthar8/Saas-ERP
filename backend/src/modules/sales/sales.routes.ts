@@ -5,20 +5,10 @@ import * as controller from "./sales.controller";
 
 const router = Router();
 
-// Create sale → MANAGER+
-router.post(
-  "/",
-  protect,
-  requireRoleLevel("MANAGER"),
-  controller.createSale
-);
-
-// Get sales → EMPLOYEE+
-router.get(
-  "/",
-  protect,
-  requireRoleLevel("EMPLOYEE"),
-  controller.getSales
-);
+router.post("/", protect, requireRoleLevel("MANAGER"), controller.createSale);
+router.get("/", protect, requireRoleLevel("EMPLOYEE"), controller.getSales);
+router.get("/:id", protect, requireRoleLevel("EMPLOYEE"), controller.getSale);
+router.get("/:id/pdf", protect, requireRoleLevel("EMPLOYEE"), controller.downloadSalesOrderPDF);
+router.put("/:id/status", protect, requireRoleLevel("MANAGER"), controller.updateSaleStatus);
 
 export default router;

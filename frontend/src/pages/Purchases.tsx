@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../lib/api";
 import Layout from "../components/Layout";
-import { Truck, Plus, Trash2, Package, Search, X, Building2 } from "lucide-react";
+import { Truck, Plus, Trash2, Package, Search, X, Building2, FileText, Download } from "lucide-react";
 
 interface Item {
   _id: string;
@@ -28,9 +28,11 @@ interface PurchaseItem {
 
 interface Purchase {
   _id: string;
-  supplierId: string;
+  supplierId: string | { _id: string; name: string };
+  supplierName?: string;
   items: PurchaseItem[];
   createdAt: string;
+  status?: string;
 }
 
 export default function Purchases() {
@@ -43,6 +45,7 @@ export default function Purchases() {
   const [selectedItems, setSelectedItems] = useState<PurchaseItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -95,9 +98,34 @@ export default function Purchases() {
     }
   };
 
-  const getSupplierName = (supplierId: string) => {
-    const supplier = suppliers.find(s => s._id === supplierId);
-    return supplier ? supplier.name : "Unknown Supplier";
+  const getSupplierName = (supplier: any) => {
+    if (!supplier) return "Unknown Supplier";
+    if (typeof supplier === 'object') return supplier.name;
+    const found = suppliers.find(s => s._id === supplier);
+    return found?.name || "Unknown Supplier";
+  };
+
+  const downloadPDF = async (purchaseId: string) => {
+    setDownloading(purchaseId);
+    try {
+      const response = await api.get(`/purchase/${purchaseId}/pdf`, {
+        responseType: 'blob',
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `PO-${purchaseId.slice(-8)}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download PDF:", err);
+      alert("Failed to download PDF");
+    } finally {
+      setDownloading(null);
+    }
   };
 
   const addItemToPurchase = (item: Item) => {
@@ -186,7 +214,6 @@ export default function Purchases() {
 
   return (
     <Layout onLogout={logout}>
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white">Purchases</h1>
@@ -212,23 +239,28 @@ export default function Purchases() {
           <table className="w-full">
             <thead className="bg-zinc-800/50 border-b border-zinc-800">
               <tr>
+                <th className="text-left p-4 text-zinc-400 font-medium text-sm">PO #</th>
                 <th className="text-left p-4 text-zinc-400 font-medium text-sm">Date</th>
                 <th className="text-left p-4 text-zinc-400 font-medium text-sm">Supplier</th>
                 <th className="text-left p-4 text-zinc-400 font-medium text-sm">Items</th>
-                <th className="text-left p-4 text-zinc-400 font-medium text-sm">Total Quantity</th>
+                <th className="text-left p-4 text-zinc-400 font-medium text-sm">Total Qty</th>
+                <th className="text-left p-4 text-zinc-400 font-medium text-sm">Actions</th>
               </tr>
             </thead>
             <tbody>
               {purchases.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center p-8 text-zinc-500">
+                  <td colSpan={6} className="text-center p-8 text-zinc-500">
                     No purchase orders yet
                   </td>
                 </tr>
               ) : (
                 purchases.map((purchase) => (
-                  <tr key={purchase._id} className="border-b border-zinc-800">
-                    <td className="p-4 text-white">
+                  <tr key={purchase._id} className="border-b border-zinc-800 hover:bg-zinc-800/30 transition">
+                    <td className="p-4 font-mono text-sm text-white">
+                      PO-{purchase._id.slice(-8).toUpperCase()}
+                    </td>
+                    <td className="p-4 text-zinc-400">
                       {new Date(purchase.createdAt).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-white">
@@ -240,6 +272,16 @@ export default function Purchases() {
                     <td className="p-4 text-white">
                       {purchase.items?.reduce((sum, i) => sum + i.quantity, 0) || 0}
                     </td>
+                    <td className="p-4">
+                      <button
+                        onClick={() => downloadPDF(purchase._id)}
+                        disabled={downloading === purchase._id}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-indigo-400 hover:bg-indigo-500/10 transition disabled:opacity-50"
+                      >
+                        <Download size={14} />
+                        {downloading === purchase._id ? "..." : "PDF"}
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -248,7 +290,7 @@ export default function Purchases() {
         </div>
       </div>
 
-      {/* Create Purchase Modal */}
+      {/* Create Purchase Modal - same as before */}
       {showModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -268,7 +310,6 @@ export default function Purchases() {
             </div>
 
             <div className="flex-1 overflow-auto p-6">
-              {/* Select Supplier */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-zinc-400 mb-2">
                   Select Supplier
@@ -287,12 +328,8 @@ export default function Purchases() {
                 </select>
               </div>
 
-              {/* Search Items */}
               <div className="relative mb-6">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"
-                  size={18}
-                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
                 <input
                   type="text"
                   placeholder="Search products to add..."
@@ -302,13 +339,10 @@ export default function Purchases() {
                 />
               </div>
 
-              {/* Search Results */}
               {searchTerm && (
                 <div className="mb-6 bg-zinc-800 rounded-lg overflow-hidden">
                   {filteredItems.length === 0 ? (
-                    <div className="p-4 text-zinc-500 text-center">
-                      No products found
-                    </div>
+                    <div className="p-4 text-zinc-500 text-center">No products found</div>
                   ) : (
                     filteredItems.map((item) => (
                       <div
@@ -321,12 +355,8 @@ export default function Purchases() {
                           <p className="text-zinc-500 text-sm">{item.sku}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-zinc-400 text-sm">
-                            Current Stock: {item.quantity}
-                          </p>
-                          <button className="text-emerald-400 text-sm mt-1">
-                            Add
-                          </button>
+                          <p className="text-zinc-400 text-sm">Stock: {item.quantity}</p>
+                          <button className="text-emerald-400 text-sm mt-1">Add</button>
                         </div>
                       </div>
                     ))
@@ -334,18 +364,12 @@ export default function Purchases() {
                 </div>
               )}
 
-              {/* Selected Items */}
               {selectedItems.length > 0 && (
                 <div>
-                  <h3 className="text-white font-medium mb-3">
-                    Items to Purchase ({selectedItems.length})
-                  </h3>
+                  <h3 className="text-white font-medium mb-3">Items ({selectedItems.length})</h3>
                   <div className="space-y-3">
                     {selectedItems.map((item) => (
-                      <div
-                        key={item.itemId}
-                        className="bg-zinc-800 rounded-lg p-3 flex items-center justify-between"
-                      >
+                      <div key={item.itemId} className="bg-zinc-800 rounded-lg p-3 flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-white font-medium">{item.name}</p>
                           <p className="text-zinc-500 text-sm">{item.sku}</p>
@@ -354,16 +378,11 @@ export default function Purchases() {
                           <input
                             type="number"
                             value={item.quantity}
-                            onChange={(e) =>
-                              updateQuantity(item.itemId, parseInt(e.target.value) || 1)
-                            }
+                            onChange={(e) => updateQuantity(item.itemId, parseInt(e.target.value) || 1)}
                             min="1"
                             className="w-20 px-2 py-1 bg-zinc-700 border border-zinc-600 rounded text-white text-center"
                           />
-                          <button
-                            onClick={() => removeItemFromPurchase(item.itemId)}
-                            className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10 transition"
-                          >
+                          <button onClick={() => removeItemFromPurchase(item.itemId)} className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/10">
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -374,14 +393,11 @@ export default function Purchases() {
               )}
             </div>
 
-            {/* Footer */}
             <div className="p-6 border-t border-zinc-800">
               {selectedSupplierData && (
                 <div className="flex items-center gap-2 mb-4 p-3 bg-emerald-500/10 rounded-lg">
                   <Building2 size={16} className="text-emerald-400" />
-                  <span className="text-emerald-400 text-sm">
-                    Supplier: {selectedSupplierData.name}
-                  </span>
+                  <span className="text-emerald-400 text-sm">Supplier: {selectedSupplierData.name}</span>
                 </div>
               )}
               <div className="flex justify-between items-center mb-4">
@@ -389,22 +405,15 @@ export default function Purchases() {
                 <span className="text-white font-semibold">{totalQuantity}</span>
               </div>
               <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setSelectedItems([]);
-                    setSelectedSupplier("");
-                    setSearchTerm("");
-                  }}
-                  className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition"
-                >
+                <button onClick={() => {
+                  setShowModal(false);
+                  setSelectedItems([]);
+                  setSelectedSupplier("");
+                  setSearchTerm("");
+                }} className="flex-1 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg">
                   Cancel
                 </button>
-                <button
-                  onClick={handleSubmit}
-                  disabled={submitting || selectedItems.length === 0 || !selectedSupplier}
-                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition disabled:opacity-50"
-                >
+                <button onClick={handleSubmit} disabled={submitting || selectedItems.length === 0 || !selectedSupplier} className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg disabled:opacity-50">
                   {submitting ? "Processing..." : "Create Purchase Order"}
                 </button>
               </div>

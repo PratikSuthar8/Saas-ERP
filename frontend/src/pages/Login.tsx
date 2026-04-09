@@ -19,7 +19,6 @@ export default function Login() {
 
     try {
       const response = await login(email, password);
-      // Check if user needs to change password
       if (response?.mustChangePassword) {
         navigate("/change-password");
       } else {
@@ -82,6 +81,12 @@ export default function Login() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+            </div>
+
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-sm text-indigo-400 hover:text-indigo-300 transition">
+                Forgot password?
+              </Link>
             </div>
 
             {error && (

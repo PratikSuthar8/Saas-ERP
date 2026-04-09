@@ -1,17 +1,16 @@
 import * as repo from "./purchase.repository";
 import { updateItemQuantity, createTransaction } from "../inventory/inventory.repository";
+import { Tenant } from "../../db/models/Tenant";
 
 export const createPurchaseOrder = async (payload: any, tenantId: string) => {
   const { supplierId, items } = payload;
 
-  // Create purchase order
   const order = await repo.createPurchaseOrder({
     tenantId,
     supplierId,
     items,
   });
 
-  // Update inventory + create transactions
   for (const item of items) {
     await updateItemQuantity(item.itemId, item.quantity);
     await createTransaction({
@@ -27,7 +26,13 @@ export const createPurchaseOrder = async (payload: any, tenantId: string) => {
 };
 
 export const getPurchaseOrders = async (tenantId: string) => {
-  const orders = await repo.getPurchaseOrders(tenantId);
-  // Return orders with supplier info (frontend will match supplier names)
-  return orders;
+  return repo.getPurchaseOrders(tenantId);
+};
+
+export const getPurchaseOrder = async (id: string, tenantId: string) => {
+  return repo.getPurchaseOrder(id, tenantId);
+};
+
+export const getCompanyDetails = async (tenantId: string) => {
+  return Tenant.findById(tenantId);
 };

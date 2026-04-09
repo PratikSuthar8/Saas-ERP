@@ -25,6 +25,11 @@ const purchaseOrderSchema = new mongoose.Schema(
       required: true,
     },
     items: [purchaseItemSchema],
+    status: {
+      type: String,
+      enum: ["DRAFT", "CONFIRMED", "SHIPPED", "DELIVERED", "CANCELLED"],
+      default: "CONFIRMED",
+    },
   },
   { timestamps: true }
 );

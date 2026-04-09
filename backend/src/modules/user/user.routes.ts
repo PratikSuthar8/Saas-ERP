@@ -32,4 +32,10 @@ router.delete(
   controller.deleteUser
 );
 
+// Update own profile
+router.put("/profile", protect, controller.updateProfile);
+
+// Change own password
+router.post("/change-password", protect, controller.changePassword);
+
 export default router;

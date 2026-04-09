@@ -27,3 +27,24 @@ export const updatePassword = async (userId: string, hashedPassword: string) => 
     mustChangePassword: false,
   });
 };
+
+export const setResetToken = async (userId: string, token: string, expiry: Date) => {
+  return User.findByIdAndUpdate(userId, {
+    resetPasswordToken: token,
+    resetPasswordExpires: expiry,
+  });
+};
+
+export const findByResetToken = async (token: string) => {
+  return User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: new Date() },
+  });
+};
+
+export const clearResetToken = async (userId: string) => {
+  return User.findByIdAndUpdate(userId, {
+    resetPasswordToken: null,
+    resetPasswordExpires: null,
+  });
+};

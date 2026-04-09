@@ -17,6 +17,24 @@ export const login = async (req: Request, res: Response) => {
   });
 };
 
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const result = await service.forgotPassword(email);
+  res.json({
+    success: true,
+    data: result,
+  });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { token, newPassword } = req.body;
+  const result = await service.resetPassword(token, newPassword);
+  res.json({
+    success: true,
+    data: result,
+  });
+};
+
 export const changePassword = async (req: any, res: Response) => {
   const { oldPassword, newPassword } = req.body;
   await service.changePassword(req.user.userId, oldPassword, newPassword);

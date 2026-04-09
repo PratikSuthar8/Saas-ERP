@@ -1,14 +1,32 @@
-import { LayoutDashboard, Package, ShoppingCart, Truck, Users as UsersIcon, UserCog, LogOut } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Package, 
+  ShoppingCart, 
+  Truck, 
+  Users as UsersIcon, 
+  UserCog, 
+  LogOut, 
+  User, 
+  Building2,
+  FileText,
+  Boxes,
+  Layers
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/", roles: ["ADMIN", "MANAGER", "EMPLOYEE"] },
+  { icon: Boxes, label: "Item Master", path: "/item-master", roles: ["ADMIN", "MANAGER", "EMPLOYEE"] },
+  { icon: Layers, label: "BOM", path: "/bom", roles: ["ADMIN", "MANAGER"] },
   { icon: Package, label: "Inventory", path: "/inventory", roles: ["ADMIN", "MANAGER", "EMPLOYEE"] },
   { icon: ShoppingCart, label: "Sales", path: "/sales", roles: ["ADMIN", "MANAGER", "EMPLOYEE"] },
   { icon: Truck, label: "Purchases", path: "/purchases", roles: ["ADMIN", "MANAGER", "EMPLOYEE"] },
   { icon: UsersIcon, label: "Suppliers", path: "/suppliers", roles: ["ADMIN", "MANAGER", "EMPLOYEE"] },
+  { icon: FileText, label: "PDF Templates", path: "/pdf-templates", roles: ["ADMIN", "MANAGER"] },
   { icon: UserCog, label: "Team", path: "/users", roles: ["ADMIN"] },
+  { icon: Building2, label: "Company", path: "/company", roles: ["ADMIN"] },
+  { icon: User, label: "Profile", path: "/profile", roles: ["ADMIN", "MANAGER", "EMPLOYEE"] },
 ];
 
 export default function Layout({ children, onLogout }: { children: React.ReactNode; onLogout: () => void }) {
@@ -30,7 +48,7 @@ export default function Layout({ children, onLogout }: { children: React.ReactNo
           <p className="text-xs text-zinc-500 mt-1">ERP System</p>
         </div>
 
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {visibleMenuItems.map((item, idx) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;

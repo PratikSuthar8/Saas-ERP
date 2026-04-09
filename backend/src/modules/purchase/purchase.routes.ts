@@ -5,20 +5,9 @@ import * as controller from "./purchase.controller";
 
 const router = Router();
 
-// Create purchase order → MANAGER+
-router.post(
-  "/",
-  protect,
-  requireRoleLevel("MANAGER"),
-  controller.createPurchaseOrder
-);
-
-// Get purchase orders → EMPLOYEE+
-router.get(
-  "/",
-  protect,
-  requireRoleLevel("EMPLOYEE"),
-  controller.getPurchaseOrders
-);
+router.post("/", protect, requireRoleLevel("MANAGER"), controller.createPurchaseOrder);
+router.get("/", protect, requireRoleLevel("EMPLOYEE"), controller.getPurchaseOrders);
+router.get("/:id", protect, requireRoleLevel("EMPLOYEE"), controller.getPurchaseOrder);
+router.get("/:id/pdf", protect, requireRoleLevel("EMPLOYEE"), controller.downloadPurchaseOrderPDF);
 
 export default router;

@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    name: {
+      type: String,
+      default: "",
+    },
     password: {
       type: String,
     },
@@ -31,6 +35,14 @@ const userSchema = new mongoose.Schema(
     mustChangePassword: {
       type: Boolean,
       default: false,
+    },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

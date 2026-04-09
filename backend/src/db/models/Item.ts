@@ -14,10 +14,59 @@ const itemSchema = new mongoose.Schema(
     sku: {
       type: String,
       required: true,
+      unique: true,
+    },
+    barcode: {
+      type: String,
+      default: "",
+    },
+    description: {
+      type: String,
+      default: "",
+    },
+    category: {
+      type: String,
+      default: "Uncategorized",
+    },
+    unitOfMeasure: {
+      type: String,
+      default: "EA",
     },
     quantity: {
       type: Number,
       default: 0,
+    },
+    minStock: {
+      type: Number,
+      default: 0,
+    },
+    maxStock: {
+      type: Number,
+      default: 0,
+    },
+    costPrice: {
+      type: Number,
+      default: 0,
+    },
+    sellingPrice: {
+      type: Number,
+      default: 0,
+    },
+    taxRate: {
+      type: Number,
+      default: 0,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    images: [{
+      type: String,
+    }],
+    attributes: {
+      type: Map,
+      of: String,
+      default: {},
     },
   },
   { timestamps: true }
