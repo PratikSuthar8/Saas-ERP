@@ -1,7 +1,6 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "packageManager": "yarn@4.13.0",
   "scripts": {
     "dev": "NODE_ENV=dev tsx watch src/server.ts",
     "dev:uat": "NODE_ENV=uat tsx watch src/server.ts",
