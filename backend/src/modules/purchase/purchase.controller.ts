@@ -29,53 +29,58 @@ export const getPurchaseOrder = async (req: any, res: Response) => {
 export const downloadPurchaseOrderPDF = async (req: any, res: Response) => {
   try {
     console.log("Downloading PDF for purchase:", req.params.id);
-    
+
     const order = await service.getPurchaseOrder(req.params.id, req.tenantId);
     if (!order) {
-      return res.status(404).json({ success: false, message: "Purchase order not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Purchase order not found" });
     }
-    
+
     const company = await service.getCompanyDetails(req.tenantId);
     const supplier = order.supplierId || {};
-    
+
     const items = (order.items || []).map((item: any) => ({
-      sku: item.itemId?.sku || 'N/A',
-      name: item.itemId?.name || 'Unknown Product',
+      sku: item.itemId?.sku || "N/A",
+      name: item.itemId?.name || "Unknown Product",
       quantity: item.quantity || 0,
       unitPrice: item.itemId?.costPrice || 0,
     }));
-    
+
     const orderId = order._id.toString();
-    
+
     const pdfData = {
       documentNumber: orderId.slice(-8).toUpperCase(),
       date: order.createdAt || new Date(),
       company: {
-        name: company?.name || 'Your Company',
-        email: company?.email || 'company@example.com',
-        phone: company?.phone || '+1 234 567 8900',
-        address: company?.address || 'Business Address',
+        name: company?.name || "Your Company",
+        email: company?.email || "company@example.com",
+        phone: company?.phone || "+1 234 567 8900",
+        address: company?.address || "Business Address",
       },
       supplier: {
-        name: supplier.name || 'Unknown Supplier',
-        email: supplier.contactEmail || 'supplier@example.com',
-        phone: supplier.phone || '+1 234 567 8900',
-        address: supplier.address || 'Supplier Address',
+        name: supplier?.name || "Unknown Supplier",
+        email: supplier?.contactEmail || "supplier@example.com",
+        phone: supplier?.phone || "+1 234 567 8900",
+        address: supplier?.address || "Supplier Address",
       },
       items: items,
     };
-    
+
     const pdf = await generatePurchaseOrderPDF(pdfData);
-    
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=PO-${orderId.slice(-8)}.pdf`);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=PO-${orderId.slice(-8)}.pdf`,
+    );
     res.send(pdf);
   } catch (error: any) {
     console.error("PDF Generation Error:", error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Failed to generate PDF",
-      error: error.message 
+      error: error.message,
     });
   }
 };
